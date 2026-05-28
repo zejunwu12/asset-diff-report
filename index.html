@@ -69,7 +69,20 @@ body { font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
 .chart { width: 100%; min-height: 700px; }
 
 /* ========== 表格 ========== */
-.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; position: relative; }
+.table-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 30px;
+  background: linear-gradient(to right, transparent, rgba(0,0,0,0.05));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.table-wrap.can-scroll-right::after { opacity: 1; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
 th { background: #f0f4f8; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 12px; color: #555; border-bottom: 2px solid #dde3ea; white-space: nowrap; position: sticky; top: 0; }
 td { padding: 8px 12px; border-bottom: 1px solid #eee; white-space: nowrap; }
@@ -83,7 +96,7 @@ tr:hover { background: #f8fafc; }
 .badge-area { background: #1565c0; }
 
 /* ========== 图例 ========== */
-.legend { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
+.legend { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
 .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #555; }
 .legend-selectable { cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; }
 .legend-selectable:hover { background: #e8f0fe; }
@@ -91,6 +104,14 @@ tr:hover { background: #f8fafc; }
 .legend-selectable:not(.selected) { opacity: 0.4; }
 .legend-selectable:not(.selected) .legend-color { filter: grayscale(50%); }
 .legend-color { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; }
+
+/* 移动端图例网格布局 */
+@media (max-width: 480px) {
+  .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; justify-content: unset; }
+  .legend .filter-switch { grid-column: 1 / -1; }
+  .legend-item { font-size: 11px; gap: 4px; padding: 2px 4px; }
+  .legend-color { width: 12px; height: 12px; }
+}
 
 /* ========== 筛选控件 ========== */
 .filter-switch { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; width: 100%; justify-content: center; flex-wrap: wrap; }
@@ -162,8 +183,6 @@ tr:hover { background: #f8fafc; }
   table { font-size: 12px; min-width: 500px; }
   th, td { padding: 6px 8px; }
   .badge { padding: 2px 6px; font-size: 10px; }
-
-  .legend { flex-direction: column; }
 }
 
 /* 手机 (480px 以下) */
@@ -178,10 +197,11 @@ tr:hover { background: #f8fafc; }
 
   body { font-size: 14px; }
 
+  /* 导航栏优化：缩短标题，简化日期 */
   .top-nav { padding: 0 8px; }
-  .top-nav .nav-title { font-size: 13px; margin-right: 4px; }
-  .top-nav .nav-btn { padding: 4px 10px; font-size: 11px; border-radius: 4px; }
-  .top-nav .nav-dates { font-size: 10px; }
+  .top-nav .nav-title { font-size: 14px; margin-right: 4px; }
+  .top-nav .nav-btn { padding: 4px 8px; font-size: 11px; border-radius: 4px; min-width: 36px; }
+  .top-nav .nav-dates { font-size: 9px; }
 
   .section-title { margin: 16px 0 10px 2px; padding-left: 8px; border-left-width: 2px; }
 
@@ -205,9 +225,10 @@ tr:hover { background: #f8fafc; }
 
   .chart { min-height: 300px; }
 
-  .filter-switch { gap: 6px; }
+  /* 筛选控件优化：左对齐 */
+  .filter-switch { gap: 6px; justify-content: flex-start; }
   .filter-label { font-size: 12px; }
-  .filter-btn, .filter-action-btn { padding: 3px 10px; font-size: 11px; }
+  .filter-btn, .filter-action-btn { padding: 3px 8px; font-size: 10px; }
 
   .table-toolbar { gap: 8px; margin-bottom: 10px; }
   .search-input { padding: 6px 10px; font-size: 12px; }
@@ -220,9 +241,6 @@ tr:hover { background: #f8fafc; }
   th, td { padding: 5px 6px; }
   th { font-size: 11px; }
   .badge { padding: 1px 5px; font-size: 10px; }
-
-  .legend-item { font-size: 12px; gap: 6px; }
-  .legend-color { width: 14px; height: 14px; }
 
   .note { font-size: 11px; padding: 10px; line-height: 1.6; }
   .hint { font-size: 12px; }
@@ -495,11 +513,12 @@ const PALETTE = [
 createApp({
   setup() {
     // ===== 页面导航 =====
-    const pages = [
+    const isMobile = () => window.innerWidth < 480;
+    const pages = computed(() => [
       { key: 'overview', label: '数据概览' },
-      { key: 'status', label: '使用状态变动' },
-      { key: 'building', label: '建筑类型变动' }
-    ];
+      { key: 'status', label: isMobile() ? '使用状态' : '使用状态变动' },
+      { key: 'building', label: isMobile() ? '建筑类型' : '建筑类型变动' }
+    ]);
     const currentPage = ref('overview');
     const switchPage = (key) => {
       currentPage.value = key;
@@ -516,8 +535,16 @@ createApp({
     };
 
     // ===== KPI 数据 =====
-    const date_c = ref('2026年03月19日');
-    const date_p = ref('2025年12月01日');
+    const date_c_raw = '2026年03月19日';
+    const date_p_raw = '2025年12月01日';
+    const date_c = computed(() => {
+      if (window.innerWidth >= 480) return date_c_raw;
+      return date_c_raw.replace(/[年月]/g, '').replace(/日$/, '');
+    });
+    const date_p = computed(() => {
+      if (window.innerWidth >= 480) return date_p_raw;
+      return date_p_raw.replace(/[年月]/g, '').replace(/日$/, '');
+    });
     
     const overviewKpis = ref([{"label": "房产总面积", "unit": "㎡", "current": "465,826.95", "previous": "465,018.67", "diff": "+808.28", "diff_raw": 808.28, "diffColor": "#c62828", "arrow": "↑"}, {"label": "资产总宗数", "unit": "宗", "current": "3933", "previous": "3911", "diff": "+22.00", "diff_raw": 22, "diffColor": "#c62828", "arrow": "↑"}, {"label": "在约合同数", "unit": "份", "current": "2520", "previous": "2525", "diff": "-5.00", "diff_raw": -5, "diffColor": "#2e7d32", "arrow": "↓"}, {"label": "可出租面积", "unit": "㎡", "current": "264,657.02", "previous": "259,090.71", "diff": "+5,566.31", "diff_raw": 5566.31, "diffColor": "#c62828", "arrow": "↑"}, {"label": "已出租面积", "unit": "㎡", "current": "247,803.65", "previous": "246,872.75", "diff": "+930.90", "diff_raw": 930.9, "diffColor": "#c62828", "arrow": "↑"}, {"label": "空置面积", "unit": "㎡", "current": "16,853.37", "previous": "12,217.96", "diff": "+4,635.41", "diff_raw": 4635.41, "diffColor": "#c62828", "arrow": "↑"}, {"label": "出租率（口径3）", "unit": "", "current": "93.63%", "previous": "95.28%", "diff": "-1.65pp", "diff_raw": -1.65, "diffColor": "#2e7d32", "arrow": "↓"}]);
     const structureKpis = ref([{"label": "可开发运作面积", "unit": "㎡", "current": "298,924.50", "previous": "293,395.90", "diff": "+5,528.60", "diff_raw": 5528.6, "diffColor": "#c62828", "arrow": "↑"}, {"label": "暂不可开发利用面积", "unit": "㎡", "current": "166,902.45", "previous": "171,622.77", "diff": "-4,720.32", "diff_raw": -4720.32, "diffColor": "#2e7d32", "arrow": "↓"}, {"label": "I类面积", "unit": "㎡", "current": "293,069.24", "previous": "293,395.90", "diff": "-326.66", "diff_raw": -326.66, "diffColor": "#2e7d32", "arrow": "↓"}, {"label": "II类面积", "unit": "㎡", "current": "172,757.71", "previous": "171,622.77", "diff": "+1,134.94", "diff_raw": 1134.94, "diffColor": "#c62828", "arrow": "↑"}, {"label": "可自主决策经营面积", "unit": "㎡", "current": "350,145.04", "previous": "344,759.82", "diff": "+5,385.22", "diff_raw": 5385.22, "diffColor": "#c62828", "arrow": "↑"}, {"label": "无经营决策权面积", "unit": "㎡", "current": "115,681.91", "previous": "120,258.85", "diff": "-4,576.94", "diff_raw": -4576.94, "diffColor": "#2e7d32", "arrow": "↓"}]);
@@ -823,6 +850,10 @@ createApp({
     });
     const statusPageInfo = computed(() => {
       const total = statusFilteredRows.value.length;
+      const isMobile = window.innerWidth < 480;
+      if (isMobile) {
+        return total > 0 ? `${statusPage.value + 1}/${statusTotalPages.value} 共${total}条` : '无记录';
+      }
       return total > 0 ? `${statusPage.value + 1} / ${statusTotalPages.value} 页（共 ${total} 条）` : '无匹配记录';
     });
 
@@ -843,6 +874,10 @@ createApp({
     });
     const buildingPageInfo = computed(() => {
       const total = buildingFilteredRows.value.length;
+      const isMobile = window.innerWidth < 480;
+      if (isMobile) {
+        return total > 0 ? `${buildingPage.value + 1}/${buildingTotalPages.value} 共${total}条` : '无记录';
+      }
       return total > 0 ? `${buildingPage.value + 1} / ${buildingTotalPages.value} 页（共 ${total} 条）` : '无匹配记录';
     });
 
@@ -955,6 +990,10 @@ createApp({
           const el = document.getElementById('sankey-' + t);
           if (el && el._fullData) Plotly.Plots.resize(el);
         });
+        // 触发计算属性更新
+        pages.value;
+        date_c.value;
+        date_p.value;
       });
 
       // 监听 hash 变化
@@ -964,6 +1003,21 @@ createApp({
           currentPage.value = hash;
         }
       });
+
+      // 表格滚动提示检测
+      const setupScrollHint = () => {
+        document.querySelectorAll('.table-wrap').forEach(wrap => {
+          const checkScroll = () => {
+            const canScroll = wrap.scrollWidth > wrap.clientWidth;
+            const isScrolledToEnd = wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 5;
+            wrap.classList.toggle('can-scroll-right', canScroll && !isScrolledToEnd);
+          };
+          wrap.addEventListener('scroll', checkScroll);
+          window.addEventListener('resize', checkScroll);
+          checkScroll();
+        });
+      };
+      nextTick(setupScrollHint);
     });
 
     return {
