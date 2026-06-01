@@ -74,9 +74,9 @@ gucheng-asset-diff-report/
 │       ├── report.html
 │       └── report_vue.html
 │
-└── data/                       # 数据文件（视需要上传）
-    ├── current_period.xlsx
-    └── previous_period.xlsx
+└── data/                       # 数据文件
+    ├── 20260331.xlsx
+    └── 20250131.xlsx
 ```
 
 ## License
