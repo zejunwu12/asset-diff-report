@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>资产差异分析报告</title>
-<script src="https://cdn.bootcdn.net/ajax/libs/plotly.js/2.35.0/plotly.min.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.5.1/plotly.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@3.4.21/dist/vue.global.prod.min.js" defer></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f7fa; color: #333; }
@@ -509,6 +511,7 @@ tr:hover { background: #f8fafc; }
 
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
 const { createApp, ref, computed, watch, onMounted, nextTick } = Vue;
 
 // Python 注入的数据
@@ -1088,6 +1091,7 @@ createApp({
     };
   }
 }).mount('#app');
+});
 </script>
 
 </body>
