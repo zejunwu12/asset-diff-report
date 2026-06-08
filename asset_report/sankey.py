@@ -79,17 +79,17 @@ def build_sankey_data(df_current, df_previous):
         row = df_c[df_c["资产编码"] == code].iloc[0]
         area = _safe_area(row.get("建筑面积"))
         status = row.get("使用细分类", "") or "未知"
-        if area > 0:
-            _add_flow(flows_all, ("__new__", status), area)
-            _add_flow(flows_changed, ("__new__", status), area)
+        flow_area = area if area > 0 else 0.01
+        _add_flow(flows_all, ("__new__", status), flow_area)
+        _add_flow(flows_changed, ("__new__", status), flow_area)
 
     for code in removed:
         row = df_p[df_p["资产编码"] == code].iloc[0]
         area = _safe_area(row.get("建筑面积"))
         status = row.get("使用细分类", "") or "未知"
-        if area > 0:
-            _add_flow(flows_all, (status, "__del__"), area)
-            _add_flow(flows_changed, (status, "__del__"), area)
+        flow_area = area if area > 0 else 0.01
+        _add_flow(flows_all, (status, "__del__"), flow_area)
+        _add_flow(flows_changed, (status, "__del__"), flow_area)
 
     for code in common:
         rc = df_c[df_c["资产编码"] == code].iloc[0]
@@ -97,8 +97,8 @@ def build_sankey_data(df_current, df_previous):
         ac, ap = _safe_area(rc.get("建筑面积")), _safe_area(rp.get("建筑面积"))
         sc, sp = rc.get("使用细分类", "") or "未知", rp.get("使用细分类", "") or "未知"
         if ac <= 0 and ap <= 0:
+            _add_flow(flows_all, (sp, sc), 0.01)
             if sp != sc:
-                _add_flow(flows_all, (sp, sc), 0.01)
                 _add_flow(flows_changed, (sp, sc), 0.01)
             continue
         area = max(ac, ap)
